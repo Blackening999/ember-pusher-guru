@@ -44,6 +44,12 @@ export default Service.extend(Ember.Evented, Checker, {
     this._setSubscriptionsEndEvents();
   },
 
+  subscribeTo(singleChannel) {
+    let channelsData = this.get('channelsData');
+    channelsData.push(singleChannel);
+    this._subscribe(singleChannel);
+  },
+
   _findOptions() {
     const options = {};
     Object.keys(this.get('pusherConfig')).forEach((key) => {
@@ -67,23 +73,32 @@ export default Service.extend(Ember.Evented, Checker, {
   },
 
   _setSubscriptionsEndEvents() {
-    this.get('channelsData').forEach((singleChannel) => {
-      const channelName = Object.keys(singleChannel)[0];
-      const channel = this._addChannel(channelName);
-      this._attachEventsToChannel(channel, channelName);
-    });
+    this.get('channelsData').forEach(singleChannel => this._subscribe(singleChannel));
 
     this.get('pusher').connection.bind('connected', (err, res) => {
       return this._connected();
     });
   },
 
-  _addChannel(name) {
-    return this.get('pusher').subscribe(name);
+  _subscribe(singleChannel) {
+    const channelName = Object.keys(singleChannel)[0];
+    const channel = this._addChannel(channelName);
+
+    if (channel) {
+      const events = fetchEvents([singleChannel], channelName);
+      this._attachEventsToChannel(channel, events);
+    }
   },
 
-  _attachEventsToChannel(channel, channelName) {
-    const events = fetchEvents(this.get('channelsData'), channelName);
+  _addChannel(name) {
+    const pusher = get(this, 'pusher');
+
+    if (!pusher.channel(name)) {
+      return this.get('pusher').subscribe(name);
+    }
+  },
+
+  _attachEventsToChannel(channel, events) {
     events.forEach((event) => {
       this._setEvent(channel, event);
     });

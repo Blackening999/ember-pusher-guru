@@ -4,8 +4,8 @@ module.exports = {
   afterInstall: function() {
     var blueprint = this;
 
-    return blueprint.addBowerPackageToProject('pusher', '3.1.0').then(function() {
-      return blueprint.addBowerPackageToProject('pusher-test-stub', '1.0.0');
+    return blueprint.addBowerPackageToProject('pusher', '3.0.0').then(function() {
+      return blueprint.addBowerPackageToProject('pusher-test-stub', '2.0.0');
     });
   }
 };
